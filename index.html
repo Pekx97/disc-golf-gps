@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Disc Golf GPS & Bag Master</title>
+    <title>Disc Golf Master & GPS</title>
     <meta name="theme-color" content="#0b1319">
     <style>
         :root {
@@ -27,8 +27,8 @@
         .logo-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent-green); font-weight: 700; }
         h1 { font-size: 22px; font-weight: 800; background: linear-gradient(135deg, #ffffff 0%, #9ca3af 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        .nav-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
-        .tab-btn { flex: 1; padding: 12px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); color: var(--text-sub); border-radius: var(--radius-md); font-weight: 700; font-size: 13px; cursor: pointer; text-align: center; }
+        .nav-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 10px 4px; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); color: var(--text-sub); border-radius: var(--radius-md); font-weight: 700; font-size: 12px; cursor: pointer; text-align: center; }
         .tab-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
 
         .tab-content { display: none; }
@@ -59,24 +59,32 @@
 
         .disc-item { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.03); }
         .disc-item-left { display: flex; align-items: center; gap: 10px; }
-        .disc-thumb { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-green); background: #000; }
+        .disc-thumb { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-green); background: #000; }
         .checkbox-custom { width: 22px; height: 22px; accent-color: var(--accent-green); cursor: pointer; }
 
+        .date-header { font-size: 12px; font-weight: 800; color: var(--accent-green); margin: 12px 0 6px 0; text-transform: uppercase; letter-spacing: 1px; }
         .history-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .history-item { background: var(--bg-card); border-radius: var(--radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .history-item { background: rgba(0,0,0,0.2); border-radius: var(--radius-md); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.03); }
         .history-item .num { font-weight: 800; font-size: 18px; color: var(--accent-green); }
+
+        /* Scorecard table */
+        .score-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .score-table th, .score-table td { padding: 8px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .score-table th { color: var(--text-sub); font-size: 11px; text-transform: uppercase; }
+        .score-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--bg-card-accent); color: #fff; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-tag">Disc Golf GPS</div>
-        <h1>Heittoetäisyys & Bägi</h1>
+        <div class="logo-tag">Disc Golf Master</div>
+        <h1>GPS, Bägi & Kierrokset</h1>
     </header>
 
     <div class="nav-tabs">
         <div class="tab-btn active" onclick="switchTab('tracker')">📍 Mittari</div>
-        <div class="tab-btn" onclick="switchTab('bag')">🥏 Oma Bägi (<span id="bag-count">0</span>)</div>
+        <div class="tab-btn" onclick="switchTab('bag')">🥏 Bägi (<span id="bag-count">0</span>)</div>
+        <div class="tab-btn" onclick="switchTab('rounds')">🏆 Kierrokset</div>
     </div>
 
     <!-- TAB 1: GPS MITTARI -->
@@ -108,64 +116,173 @@
 
         <div class="section-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <span class="input-label" style="margin:0;">Tallennetut heitot</span>
+                <span class="input-label" style="margin:0;">Päiväkohtaiset heitot</span>
                 <button style="background:none; border:none; color:var(--danger); font-size:12px; cursor:pointer;" onclick="clearHistory()">Tyhjennä</button>
             </div>
-            <ul class="history-list" id="history-list"></ul>
+            <div id="history-container"></div>
         </div>
     </div>
 
     <!-- TAB 2: OMA BÄGI -->
     <div id="tab-bag" class="tab-content">
         <div class="section-box">
-            <span class="input-label">Lisää uusi kiekko bägiiin</span>
-            <input type="text" class="text-input" id="new-disc-name" placeholder="Kiekon nimi (esim. Star Destroyer)">
+            <span class="input-label">Lisää kiekko valmiista tietokannasta</span>
+            <select class="select-input" id="brand-select" onchange="loadBrandDiscs()">
+                <option value="">-- Valitse Valmistaja --</option>
+            </select>
+            <select class="select-input" id="preset-disc-select">
+                <option value="">-- Valitse ensin valmistaja --</option>
+            </select>
             
             <label class="btn btn-outline" style="margin-bottom: 8px;">
-                📷 Ota tai valitse kuva
+                📷 Ota tai valitse kuva (Valinnainen)
                 <input type="file" id="new-disc-photo" accept="image/*" capture="environment" style="display: none;" onchange="handlePhotoSelect(event)">
             </label>
             <div id="photo-status" style="font-size: 11px; color: var(--accent-green); text-align: center; margin-bottom: 8px;"></div>
-            
-            <button class="btn btn-primary" onclick="addDiscToBag()">+ Tallenna kiekko bägiiin</button>
+
+            <button class="btn btn-primary" onclick="addPresetDiscToBag()">+ Lisää kiekko bägiiin</button>
+        </div>
+
+        <div class="section-box">
+            <span class="input-label">Tai lisää omalla nimellä</span>
+            <input type="text" class="text-input" id="custom-disc-name" placeholder="Esim. Custom Prototype">
+            <button class="btn btn-outline" onclick="addCustomDiscToBag()">Lisää omalla nimellä</button>
         </div>
 
         <div class="section-box">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <span class="input-label" style="margin:0;">Bägin sisältö (Tarkista kiekot)</span>
+                <span class="input-label" style="margin:0;">Bägin sisältö</span>
                 <button class="btn btn-outline" style="width:auto; padding:4px 8px; font-size:11px; margin:0;" onclick="checkAllDiscs(true)">Valitse kaikki</button>
             </div>
             <div id="bag-list"></div>
         </div>
     </div>
 
-    <script>
-        let startCoords = null;
-        let currentCoords = null;
-        let lastDistance = 0;
-        let tempPhotoBase64 = null;
+    <!-- TAB 3: KIERROKSET & TULOSKORTTI -->
+    <div id="tab-rounds" class="tab-content">
+        <div class="section-box">
+            <span class="input-label">Uusi kierros</span>
+            <input type="text" class="text-input" id="course-name" placeholder="Radan nimi (esim. Ahvenisto)">
+            <input type="text" class="text-input" id="player-names" placeholder="Pelaajat pilkulla (esim. Pekko, Matti, Antti)">
+            <button class="btn btn-primary" onclick="startNewRound()">🚀 Aloita uusi kierros</button>
+        </div>
 
-        let bag = JSON.parse(localStorage.getItem('dg_bag_v2')) || [
+        <div id="active-round-box" class="section-box" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 id="active-course-title" style="font-size:16px;">--</h3>
+                <span id="current-hole-display" style="font-size:13px; color:var(--accent-green); font-weight:700;">Väylä 1</span>
+            </div>
+
+            <table class="score-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">Pelaaja</th>
+                        <th>Par</th>
+                        <th>Tulos</th>
+                        <th>Erotus</th>
+                    </tr>
+                </thead>
+                <tbody id="scorecard-body"></tbody>
+            </table>
+
+            <div style="display:flex; gap:8px; margin-top:14px;">
+                <button class="btn btn-outline" onclick="changeHole(-1)">← Edellinen</button>
+                <button class="btn btn-secondary" onclick="changeHole(1)">Seuraava väylä →</button>
+            </div>
+            <button class="btn btn-danger" style="width:100%; margin-top:8px;" onclick="finishRound()">Lopeta ja tallenna kierros</button>
+        </div>
+
+        <div class="section-box">
+            <span class="input-label">Aiemmat kierrokset</span>
+            <div id="rounds-history-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // KIEKKOTIETOKANTA
+        const DISC_DB = {
+            "Innova": ["Destroyer", "Firebird", "Wraith", "Aviar", "Roc3", "TeeBird", "Leopard3", "Boss", "Mako3", "Shryke"],
+            "Discraft": ["Buzzz", "Zone", "Luna", "Zeus", "Anax", "Hades", "Undertaker", "Raptor", "Machete", "Roach"],
+            "Discmania": ["P2", "FD", "PD", "DD3", "MD3", "Logic", "Essence", "Enigma", "Tactic", "Origin"],
+            "Prodigy": ["PA-3", "M4", "FX-2", "D2", "A2", "A3", "A5", "PA-1", "D1", "MX-3"],
+            "Latitude 64": ["Pure", "Compass", "Explorer", "River", "Saint", "Grace", "Rive", "Bolt", "Fuse", "Keystone"],
+            "Kastaplast": ["Berg", "Reko", "Grym", "Lots", "Svea", "Falk", "Kaxe", "Guld", "Nord", "Vass"],
+            "MVP / Axiom": ["Envy", "Hex", "Glitch", "Crave", "Wave", "Photon", "Proxy", "Fireball", "Time-Lapse", "Nomad"]
+        };
+
+        let startCoords = null, currentCoords = null, lastDistance = 0, tempPhotoBase64 = null;
+        let currentHole = 1;
+
+        let bag = JSON.parse(localStorage.getItem('dg_bag_v3')) || [
             { id: 1, name: "Innova Destroyer", photo: "", inBag: true },
             { id: 2, name: "Discraft Buzzz", photo: "", inBag: true }
         ];
-        let history = JSON.parse(localStorage.getItem('dg_history_v2') || '[]');
+        let history = JSON.parse(localStorage.getItem('dg_history_v3') || '[]');
+        let activeRound = JSON.parse(localStorage.getItem('dg_active_round_v3')) || null;
+        let completedRounds = JSON.parse(localStorage.getItem('dg_completed_rounds_v3')) || [];
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            if (tabName === 'tracker') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                document.getElementById('tab-tracker').classList.add('active');
-            } else {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                document.getElementById('tab-bag').classList.add('active');
+            const tabs = ['tracker', 'bag', 'rounds'];
+            const idx = tabs.indexOf(tabName);
+            document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        // --- BÄGI & TIETOKANTA ---
+        function initDiscDB() {
+            const brandSelect = document.getElementById('brand-select');
+            brandSelect.innerHTML = '<option value="">-- Valitse Valmistaja --</option>';
+            Object.keys(DISC_DB).forEach(brand => {
+                const opt = document.createElement('option');
+                opt.value = brand;
+                opt.innerText = brand;
+                brandSelect.appendChild(opt);
+            });
+        }
+
+        function loadBrandDiscs() {
+            const brand = document.getElementById('brand-select').value;
+            const discSelect = document.getElementById('preset-disc-select');
+            discSelect.innerHTML = '';
+
+            if (!brand || !DISC_DB[brand]) {
+                discSelect.innerHTML = '<option value="">-- Valitse ensin valmistaja --</option>';
+                return;
             }
+
+            DISC_DB[brand].forEach(disc => {
+                const opt = document.createElement('option');
+                opt.value = `${brand} ${disc}`;
+                opt.innerText = `${brand} ${disc}`;
+                discSelect.appendChild(opt);
+            });
+        }
+
+        function addPresetDiscToBag() {
+            const discName = document.getElementById('preset-disc-select').value;
+            if (!discName) { alert("Valitse kiekko listalta!"); return; }
+            saveDiscToBag(discName);
+        }
+
+        function addCustomDiscToBag() {
+            const discName = document.getElementById('custom-disc-name').value.trim();
+            if (!discName) { alert("Kirjoita kiekon nimi!"); return; }
+            saveDiscToBag(discName);
+            document.getElementById('custom-disc-name').value = '';
+        }
+
+        function saveDiscToBag(name) {
+            bag.push({ id: Date.now(), name: name, photo: tempPhotoBase64 || "", inBag: true });
+            tempPhotoBase64 = null;
+            document.getElementById('photo-status').innerText = '';
+            saveBag();
         }
 
         function saveBag() {
-            localStorage.setItem('dg_bag_v2', JSON.stringify(bag));
+            localStorage.setItem('dg_bag_v3', JSON.stringify(bag));
             renderBagUI();
             populateDiscSelect();
         }
@@ -176,14 +293,13 @@
             list.innerHTML = '';
 
             if (bag.length === 0) {
-                list.innerHTML = '<div style="color:var(--text-sub); font-size:13px; text-align:center; padding:10px;">Bägi on tyhjä. Lisää kiekkoja ylhäältä!</div>';
+                list.innerHTML = '<div style="color:var(--text-sub); font-size:13px; text-align:center; padding:10px;">Bägi on tyhjä.</div>';
                 return;
             }
 
             bag.forEach((disc, idx) => {
                 const item = document.createElement('div');
                 item.className = 'disc-item';
-
                 const imgHtml = disc.photo ? `<img src="${disc.photo}" class="disc-thumb">` : `<span style="font-size:24px;">🥏</span>`;
 
                 item.innerHTML = `
@@ -203,27 +319,13 @@
             });
         }
 
-        function toggleInBag(idx) {
-            bag[idx].inBag = !bag[idx].inBag;
-            saveBag();
-        }
-
-        function checkAllDiscs(status) {
-            bag.forEach(d => d.inBag = status);
-            saveBag();
-        }
-
-        function removeDisc(idx) {
-            if (confirm(`Poistetaanko "${bag[idx].name}" bägistä?`)) {
-                bag.splice(idx, 1);
-                saveBag();
-            }
-        }
+        function toggleInBag(idx) { bag[idx].inBag = !bag[idx].inBag; saveBag(); }
+        function checkAllDiscs(status) { bag.forEach(d => d.inBag = status); saveBag(); }
+        function removeDisc(idx) { if (confirm(`Poistetaanko "${bag[idx].name}"?`)) { bag.splice(idx, 1); saveBag(); } }
 
         function handlePhotoSelect(e) {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
@@ -231,63 +333,31 @@
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
                     const maxDim = 300;
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > maxDim) { height *= maxDim / width; width = maxDim; }
-                    } else {
-                        if (height > maxDim) { width *= maxDim / height; height = maxDim; }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
+                    let w = img.width, h = img.height;
+                    if (w > h) { if (w > maxDim) { h *= maxDim / w; w = maxDim; } }
+                    else { if (h > maxDim) { w *= maxDim / h; h = maxDim; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     tempPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                    document.getElementById('photo-status').innerText = "Kuva ladattu valmiiksi ✓";
+                    document.getElementById('photo-status').innerText = "Kuva ladattu ✓";
                 }
             };
             reader.readAsDataURL(file);
-        }
-
-        function addDiscToBag() {
-            const nameInput = document.getElementById('new-disc-name');
-            const name = nameInput.value.trim();
-            if (!name) { alert("Kirjoita kiekon nimi!"); return; }
-
-            bag.push({
-                id: Date.now(),
-                name: name,
-                photo: tempPhotoBase64 || "",
-                inBag: true
-            });
-
-            nameInput.value = '';
-            tempPhotoBase64 = null;
-            document.getElementById('photo-status').innerText = '';
-            saveBag();
         }
 
         function populateDiscSelect() {
             const select = document.getElementById('disc-select');
             select.innerHTML = '';
             const activeDiscs = bag.filter(d => d.inBag);
-
-            if (activeDiscs.length === 0) {
-                select.innerHTML = '<option value="">Ei kiekkoja bägissä</option>';
-                return;
-            }
-
+            if (activeDiscs.length === 0) { select.innerHTML = '<option value="">Ei kiekkoja bägissä</option>'; return; }
             activeDiscs.forEach((d) => {
                 const opt = document.createElement('option');
-                opt.value = d.name;
-                opt.innerText = d.name;
+                opt.value = d.name; opt.innerText = d.name;
                 select.appendChild(opt);
             });
         }
 
+        // --- GPS & HEITOT ---
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371000;
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -301,25 +371,18 @@
         function initGPS() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.watchPosition(
-                    (position) => {
-                        currentCoords = position.coords;
-                        document.getElementById('accuracy').innerText = `±${Math.round(position.coords.accuracy)} m`;
+                    (pos) => {
+                        currentCoords = pos.coords;
+                        document.getElementById('accuracy').innerText = `±${Math.round(pos.coords.accuracy)} m`;
                         document.getElementById('gps-dot').classList.add('active');
                         document.getElementById('status-text').innerText = "GPS Aktiivinen";
-
                         if (startCoords) {
-                            const dist = calculateDistance(
-                                startCoords.latitude, startCoords.longitude,
-                                currentCoords.latitude, currentCoords.longitude
-                            );
+                            const dist = calculateDistance(startCoords.latitude, startCoords.longitude, currentCoords.latitude, currentCoords.longitude);
                             lastDistance = dist.toFixed(1);
                             document.getElementById('distance').innerText = lastDistance;
                         }
                     },
-                    (error) => {
-                        document.getElementById('status-text').innerText = "GPS-virhe: " + error.message;
-                        document.getElementById('gps-dot').classList.remove('active');
-                    },
+                    (err) => { document.getElementById('status-text').innerText = "GPS-virhe: " + err.message; },
                     { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
                 );
             }
@@ -341,47 +404,68 @@
             const discName = select.value || "Tuntematon kiekko";
             const foundDisc = bag.find(d => d.name === discName);
             
+            const now = new Date();
             const record = {
                 disc: discName,
                 photo: foundDisc ? foundDisc.photo : "",
                 distance: lastDistance,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                date: now.toLocaleDateString('fi-FI'),
+                time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
 
             history.push(record);
-            localStorage.setItem('dg_history_v2', JSON.stringify(history));
+            localStorage.setItem('dg_history_v3', JSON.stringify(history));
             renderHistoryUI();
             document.getElementById('mode-label').innerText = "Tallennettu!";
         }
 
         function renderHistoryUI() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = '';
+            const container = document.getElementById('history-container');
+            container.innerHTML = '';
             if (history.length === 0) {
-                list.innerHTML = '<li style="color:var(--text-sub); font-size:12px; text-align:center; padding:8px;">Ei heittoja.</li>';
+                container.innerHTML = '<div style="color:var(--text-sub); font-size:12px; text-align:center; padding:8px;">Ei tallennettuja heittoja.</div>';
                 return;
             }
-            history.slice().reverse().forEach((item) => {
-                const li = document.createElement('li');
-                li.className = 'history-item';
-                const img = item.photo ? `<img src="${item.photo}" class="disc-thumb" style="width:32px;height:32px;">` : `🥏`;
-                li.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        ${img}
-                        <div>
-                            <div style="font-weight:700; font-size:13px;">${item.disc}</div>
-                            <div style="font-size:10px; color:var(--text-sub);">${item.time}</div>
+
+            // Ryhmittele päivän mukaan
+            const grouped = {};
+            history.forEach(item => {
+                const dateKey = item.date || 'Aiemmat';
+                if (!grouped[dateKey]) grouped[dateKey] = [];
+                grouped[dateKey].push(item);
+            });
+
+            Object.keys(grouped).reverse().forEach(date => {
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'date-header';
+                dateHeader.innerText = `📅 ${date}`;
+                container.appendChild(dateHeader);
+
+                const ul = document.createElement('ul');
+                ul.className = 'history-list';
+
+                grouped[date].reverse().forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    const img = item.photo ? `<img src="${item.photo}" class="disc-thumb" style="width:32px;height:32px;">` : `🥏`;
+                    li.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            ${img}
+                            <div>
+                                <div style="font-weight:700; font-size:13px;">${item.disc}</div>
+                                <div style="font-size:10px; color:var(--text-sub);">${item.time}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div><span class="num">${item.distance}</span> <span style="font-size:12px; color:var(--text-sub);">m</span></div>
-                `;
-                list.appendChild(li);
+                        <div><span class="num">${item.distance}</span> <span style="font-size:12px; color:var(--text-sub);">m</span></div>
+                    `;
+                    ul.appendChild(li);
+                });
+                container.appendChild(ul);
             });
         }
 
         function resetMeasurement() {
-            startCoords = null;
-            lastDistance = 0;
+            startCoords = null; lastDistance = 0;
             document.getElementById('distance').innerText = "0.0";
             document.getElementById('start-status').innerText = "Ei asetettu";
             document.getElementById('mode-label').innerText = "Nykyinen Etäisyys";
@@ -391,16 +475,159 @@
         function clearHistory() {
             if (confirm("Tyhjennetäänkö heittohistoria?")) {
                 history = [];
-                localStorage.removeItem('dg_history_v2');
+                localStorage.removeItem('dg_history_v3');
                 renderHistoryUI();
             }
         }
 
+        // --- KIERROKSET & TULOSKORTTI ---
+        function startNewRound() {
+            const course = document.getElementById('course-name').value.trim();
+            const playersStr = document.getElementById('player-names').value.trim();
+
+            if (!course || !playersStr) { alert("Syötä radan nimi ja ainakin yksi pelaaja!"); return; }
+
+            const playerList = playersStr.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            
+            activeRound = {
+                course: course,
+                date: new Date().toLocaleDateString('fi-FI'),
+                players: playerList,
+                scores: {} // { "Pelaaja": { hole1: { par: 3, strokes: 3 } } }
+            };
+
+            playerList.forEach(p => {
+                activeRound.scores[p] = {};
+                for (let h = 1; h <= 18; h++) {
+                    activeRound.scores[p][h] = { par: 3, strokes: 3 };
+                }
+            });
+
+            currentHole = 1;
+            saveActiveRound();
+            renderScorecard();
+        }
+
+        function saveActiveRound() {
+            localStorage.setItem('dg_active_round_v3', JSON.stringify(activeRound));
+        }
+
+        function renderScorecard() {
+            const roundBox = document.getElementById('active-round-box');
+            if (!activeRound) { roundBox.style.display = 'none'; return; }
+
+            roundBox.style.display = 'block';
+            document.getElementById('active-course-title').innerText = activeRound.course;
+            document.getElementById('current-hole-display').innerText = `Väylä ${currentHole} / 18`;
+
+            const tbody = document.getElementById('scorecard-body');
+            tbody.innerHTML = '';
+
+            activeRound.players.forEach(player => {
+                const holeData = activeRound.scores[player][currentHole] || { par: 3, strokes: 3 };
+                
+                // Laske kokonaistulos
+                let totalStrokes = 0, totalPar = 0;
+                for (let h = 1; h <= 18; h++) {
+                    const data = activeRound.scores[player][h];
+                    if (data) { totalStrokes += data.strokes; totalPar += data.par; }
+                }
+                const diff = totalStrokes - totalPar;
+                const diffStr = diff > 0 ? `+${diff}` : (diff === 0 ? 'E' : `${diff}`);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="text-align:left; font-weight:700;">${player}</td>
+                    <td>
+                        <button class="score-btn" onclick="adjustScore('${player}', 'par', -1)">-</button>
+                        <span style="margin:0 4px;">${holeData.par}</span>
+                        <button class="score-btn" onclick="adjustScore('${player}', 'par', 1)">+</button>
+                    </td>
+                    <td>
+                        <button class="score-btn" onclick="adjustScore('${player}', 'strokes', -1)">-</button>
+                        <span style="margin:0 6px; font-weight:800; font-size:15px; color:var(--accent-green);">${holeData.strokes}</span>
+                        <button class="score-btn" onclick="adjustScore('${player}', 'strokes', 1)">+</button>
+                    </td>
+                    <td style="font-weight:700; color:${diff > 0 ? 'var(--danger)' : 'var(--accent-green)'};">${diffStr}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function adjustScore(player, type, delta) {
+            if (!activeRound) return;
+            const current = activeRound.scores[player][currentHole][type];
+            if (current + delta >= 1) {
+                activeRound.scores[player][currentHole][type] += delta;
+                saveActiveRound();
+                renderScorecard();
+            }
+        }
+
+        function changeHole(delta) {
+            if (currentHole + delta >= 1 && currentHole + delta <= 18) {
+                currentHole += delta;
+                renderScorecard();
+            }
+        }
+
+        function finishRound() {
+            if (!confirm("Lopetetaanko ja tallennetaanko kierros?")) return;
+            
+            completedRounds.push(activeRound);
+            localStorage.setItem('dg_completed_rounds_v3', JSON.stringify(completedRounds));
+            
+            activeRound = null;
+            localStorage.removeItem('dg_active_round_v3');
+            renderScorecard();
+            renderCompletedRoundsUI();
+            alert("Kierros tallennettu!");
+        }
+
+        function renderCompletedRoundsUI() {
+            const list = document.getElementById('rounds-history-list');
+            list.innerHTML = '';
+
+            if (completedRounds.length === 0) {
+                list.innerHTML = '<div style="color:var(--text-sub); font-size:12px; text-align:center; padding:8px;">Ei tallennettuja kierroksia.</div>';
+                return;
+            }
+
+            completedRounds.slice().reverse().forEach(rd => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.style.flexDirection = 'column';
+                item.style.alignItems = 'flex-start';
+                item.style.gap = '4px';
+
+                let playerSummary = rd.players.map(p => {
+                    let st = 0, pr = 0;
+                    for (let h = 1; h <= 18; h++) {
+                        if (rd.scores[p][h]) { st += rd.scores[p][h].strokes; pr += rd.scores[p][h].par; }
+                    }
+                    const diff = st - pr;
+                    return `${p}: ${st} (${diff > 0 ? '+' + diff : (diff === 0 ? 'E' : diff)})`;
+                }).join(' | ');
+
+                item.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; width:100%;">
+                        <strong style="color:#fff;">${rd.course}</strong>
+                        <span style="font-size:11px; color:var(--text-sub);">${rd.date}</span>
+                    </div>
+                    <div style="font-size:12px; color:var(--accent-green);">${playerSummary}</div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
         window.onload = () => {
             initGPS();
+            initDiscDB();
             renderBagUI();
             populateDiscSelect();
             renderHistoryUI();
+            renderScorecard();
+            renderCompletedRoundsUI();
         };
     </script>
 </body>
